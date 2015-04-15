@@ -32,8 +32,7 @@ Or edit 'dbclass.connectioninfo.i.php' and add '$Database' and '$Table' and add 
 ```
 source mktable.sql;
 ``` 
-or just do it the hard way by typing in the create statement.
-
+or just do it the hard way by typing in the create statement.  
 4. add some images to your database table. There are two easy ways to do this: 
 
     a) use the addupdateimage.php program. From you web browser (hopefully not IE) enter the following in the location area:
