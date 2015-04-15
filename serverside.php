@@ -19,7 +19,7 @@ $ss = new MySqlSlideshow($Host, $User, $Password, $Database); // use values from
 
 // for use in <form action="$self" tags.
 
-$self = $_SERVER[PHP_SELF];
+$self = $_SERVER['PHP_SELF'];
 
 // Check for Microsoft Internet Explorer -- because everything Microsoft makes is broken!
 
@@ -34,8 +34,8 @@ $ieMsg = $isIe ? '<p style="color: red">Microsoft Internet Explorer Version, bec
 // One could of course design this section differently so the
 // order was not important but this is only an example of using the CLASS.
 
-if($_POST[stop]) {
-  unset($_SESSION[next]);
+if($_POST['stop']) {
+  unset($_SESSION['next']);
   echo <<<EOF
 <html>
 <head>
@@ -53,37 +53,37 @@ EOF;
   exit();
 }
 
-if($_POST[start]) {
-  $_SESSION[next] = "next";
+if($_POST['start']) {
+  $_SESSION['next'] = "next";
 }
 
-if($_SESSION[next] == "next") {
-  $inx = $_SESSION[index];
-  $ids = $_SESSION[ids];
+if($_SESSION['next'] == "next") {
+  $inx = $_SESSION['index'];
+  $ids = $_SESSION['ids'];
 
   // Microsoft test
   
-  if(!isIE) {
-    $images = $_SESSION[images];
+  if(!$isIe) {
+    $images = $_SESSION['images'];
   
-    // getImage() returns an assoc array [data], [mime], [subject], and [desc]
-    // [data] is base64 by default. If a second argument is provided as 'raw' then the data is the raw image data.
+    // getImage() returns an assoc array ['data'], ['mime'], ['subject'], and ['desc']
+    // ['data'] is base64 by default. If a second argument is provided as 'raw' then the data is the raw image data.
 
     $data = $images[$inx++];
-    $_SESSION[index] = ($inx > count($ids)-1) ? 0 : $inx;
+    $_SESSION['index'] = ($inx > count($ids)-1) ? 0 : $inx;
   
-    $image = $data[data]; // image in base64
-    $mime = $data[mime]; // mime type like "image/gif" etc.
-    $subject = $data[subject]; 
-    $desc = $data[desc];
+    $image = $data['data']; // image in base64
+    $mime = $data['mime']; // mime type like "image/gif" etc.
+    $subject = $data['subject']; 
+    $desc = $data['desc'];
   } else {
     // Handle BROKEN Browser!
     
     $image = "mysqlslideshow.php?image=$ids[$inx]&type=raw";
     $info = $ss->getInfo($ids[$inx++]);
-    $_SESSION[index] = ($inx > count($ids)-1) ? 0 : $inx;
-    $subject = $info[subject];
-    $desc = $info[description];
+    $_SESSION['index'] = ($inx > count($ids)-1) ? 0 : $inx;
+    $subject = $info['subject'];
+    $desc = $info['description'];
   }
   
   echo <<<EOF
@@ -122,8 +122,8 @@ $ids = $ss->getImageIds();
 
 // Set the session up. 
 
-$_SESSION[ids] = $ids; 
-$_SESSION[index] = 0; // Start at the beginning
+$_SESSION['ids'] = $ids; 
+$_SESSION['index'] = 0; // Start at the beginning
 
 // Get all the images
 // For NON IE browsers we can cache the images.
@@ -134,7 +134,7 @@ if(!$isIe) {
   for($i=0; $i < count($ids); ++$i) {
     $images[$i] = $ss->getImage($ids[$i]);
   }
-  $_SESSION[images] = $images;
+  $_SESSION['images'] = $images;
 }
 
 // Here is the example of a slide show.
@@ -143,6 +143,8 @@ if(!$isIe) {
 //
 // The style is to add borders and padding to the table.
 //
+
+$display = $ss->displayAllImageInfo();
 
 echo <<<EOF
 <html>
@@ -163,12 +165,7 @@ $ieMsg
 <input type="submit" name="start" value="Start"/>
 </form>
 </div>
-
-EOF;
-
-$ss->displayAllImageInfo();
-
-echo <<<EOF
-  </body>
+$display
+</body>
 </html>
 EOF;

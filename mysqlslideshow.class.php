@@ -23,8 +23,9 @@
 //
 
 // include a database class file.
-// what I do is have a file that is not accessable by the web server but can be loaded via require_once().
-// In this file I have the user, password so these are secure.
+// The 'dbMysqli.class.php' MUST be in the same place as this file! The other database
+// files: 'dbMysqli.class.php', 'dbAbstract.class.php', 'SqlException.cass.php',
+// 'Error.class.php' and 'helper-functions.php' MUST all be in the same place!
 
 require_once("dbMysqli.class.php"); // name of your Database class file.
 
@@ -131,7 +132,7 @@ class MySqlSlideshow extends dbMysqli {
   
   public function imageQuery($where="") {
     if(isset($whre)) {
-      echo "where=$where";
+      //echo "where=$where";
       $where = " where $where";
     }
     // Note Database::query() can either just output an error message and exit,
@@ -251,37 +252,31 @@ class MySqlSlideshow extends dbMysqli {
   
   public function displayAllImageInfo() {
     $this->query("select id, subject, description, data, created from $this->table");
-    echo <<<EOF
+
+    $row = $this->fetchrow('assoc');
+    
+    $body = "<tr>\n";
+    foreach($row as $key=>$value) {
+      $body .= "<th>$key</th>\n";
+    }
+    $body .= "</tr>\n</thead>\n<tbody>\n$line</tr>\n";
+    
+    do {
+      $body .= "<tr>\n";
+      foreach($row as $value) {
+        $item = $value ? $value : "&nbsp;";
+        $body .= "<td>$item</td>\n";
+      }
+      $body .= "</tr>\n";
+    } while($row = $this->fetchrow('assoc'));
+    
+    return <<<EOF
 <table id="displayAllImageInfo">
 <thead>
 <tr>
-
-EOF;
-    $header = true;
-
-    while($row = $this->fetchrow('assoc')) {
-      if($header) {
-        $header = false;
-        $line = "<tr>\n";
-        foreach($row as $key=>$value) {
-          echo "<th>$key</th>\n";
-          $item = $value ? $value : "&nbsp;";
-          $line .= "<td>$item</td>\n";
-        }
-        echo "</tr>\n</thead>\n<tbody>\n";
-        echo "$line</tr>\n";
-      }
-      echo "<tr>\n";
-      foreach($row as $value) {
-        $item = $value ? $value : "&nbsp;";
-        echo "<td>$item</td>\n";
-      }
-      echo "</tr>\n";
-    }
-    echo <<<EOF
+$body
 </tbody>
 </table>
-
 EOF;
   }
 }

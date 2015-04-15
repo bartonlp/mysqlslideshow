@@ -20,11 +20,14 @@
  * Parts of this documentation included from MySQL manual with permissions of Oracle Corporation.
  */
 
+// These MUST be in the same place as 'mysqlslideshow.class.php'
+
 require_once("dbAbstract.class.php");
 require_once("SqlException.class.php");
 require_once("Error.class.php");
 require_once("helper-functions.php");
 
+// For development. If you want this for production comment the next two lines out.
 Error::setDevelopment(true);
 Error::setNoEmailErrs(true);
 
