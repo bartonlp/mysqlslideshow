@@ -17,9 +17,7 @@ Either download the ZIP file or install with Composer.
 For the ZIP file:
 
 1. unzip the zip file (you have probably already done this if you are reading this)
-
 2. edit the 'dbclass.connectioninfo.i.php' file for your MySql site and then optionally move it to a location that is not in your Apache server path.
-
 3. create your MySql database and table. If you have an existing database and you want to use it, then you don't need to create the database. Other wise in the 'mysql' client: 
 ```
 CREATE DATABASE mysqlslideshow;
@@ -53,8 +51,7 @@ or just do it the hard way by typing in the create statement.
 ```
 ?path=../images/*&pattern=^big.*?(?:ball)|(?:flag)\.jpg
 ``` 
-then all of the file in the '../images' directory would be gathered and the pattern would then be applied to each. Say you have files "bigredflag.jpg", "bigblueball.jpg" along with many others, the pattern would put only those two into the selection list.  The program display your selected file with a check-box and input-boxes for a subject and description. Make your selections and click submit.
-
+then all of the file in the '../images' directory would be gathered and the pattern would then be applied to each. Say you have files "bigredflag.jpg", "bigblueball.jpg" along with many others, the pattern would put only those two into the selection list.  The program display your selected file with a check-box and input-boxes for a subject and description. Make your selections and click submit.  
 5. try out the examples 'serverside.php' and 'browserside.html' on your own server. Then start writing your own code.  Have fun. If you don't have Apache running you can use the PHP server. Just enter 
 ```
 php -S localhost:8080
