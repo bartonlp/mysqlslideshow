@@ -40,11 +40,11 @@ source mktable.sql;
 or just do it the hard way by typing in the create statement.</li>
 <li>add some images to your database table. There are two easy ways to do this: 
 <ol style="list-style-type: alpha">
-    <li>use the addupdateimage.php program. From you web browser (hopefully not IE) enter the following in the location area:
+    <li>use the 'addupdateimage.php' program. From you web browser (hopefully not IE) enter the following in the location area:
 
 <pre><code>
 http://yoursite/addupdateimage.php?image=imageFileName&subject=subject+text&description=more+text+here
-</code</pre>
+</code></pre>
 
 If you want the image data saved in the table instead of the path to the image add the '&type=image' to the line above. You can use a relative path or absolute path. Relative paths will be turned into absolute for the database. This will add one image.</li>
     
