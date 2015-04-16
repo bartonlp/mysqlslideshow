@@ -22,7 +22,7 @@
     "minimum-stability": "stable",
     "autoload" : {
         "files": [
-            "mysqlslideshow.class.php"
+            "class/mysqlslideshow.class.php"
         ]
     }    
 }
