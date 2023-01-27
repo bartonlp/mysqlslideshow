@@ -5,21 +5,9 @@
 
 session_start(); 
 
-require_once("dbclass.connectinfo.i.php"); // has $Host, $User, $Password
-
 // This file has the MySqlSlideshow class
 
-if(file_exists("../class")) {
-  require_once("../class/mysqlslideshow.class.php");
-} else {
-  require_once("../vendor/autoload.php");
-}
-
-// Construct the slideshow class:
-// There is a 4th argument for the database name if not "mysqlslideshow" and a 5th argument for the table name if not
-// "mysqlslideshow"
-
-$ss = new MySqlSlideshow($Host, $User, $Password, $Database); // use values from dbclass.connectinfo.i.php
+require_once("mysqlslideshow.class.php"); // This instantiates $ss
 
 // for use in <form action="$self" tags.
 
@@ -28,6 +16,7 @@ $self = $_SERVER['PHP_SELF'];
 // Check for Microsoft Internet Explorer -- because everything Microsoft makes is broken!
 
 $isIe = preg_match('/MSIE/', $_SERVER['HTTP_USER_AGENT']);
+//$isIe = true;
 $ieMsg = $isIe ? '<p style="color: red">Microsoft Internet Explorer Version, because Microsoft can not do it like anyone else!</p>' : "";
 
 // This file should not be in the Apache path for security reasons   
@@ -70,20 +59,22 @@ if($_SESSION['next'] == "next") {
   if(!$isIe) {
     $images = $_SESSION['images'];
   
-    // getImage() returns an assoc array ['data'], ['mime'], ['subject'], and ['desc']
+    // getImage() returns an assoc array ['data'], ['mime']
     // ['data'] is base64 by default. If a second argument is provided as 'raw' then the data is the raw image data.
+
+    $info = $ss->getInfo($ids[$inx]);
+    $subject = $info['subject']; 
+    $desc = $info['description'];
 
     $data = $images[$inx++];
     $_SESSION['index'] = ($inx > count($ids)-1) ? 0 : $inx;
   
     $image = $data['data']; // image in base64
     $mime = $data['mime']; // mime type like "image/gif" etc.
-    $subject = $data['subject']; 
-    $desc = $data['desc'];
   } else {
     // Handle BROKEN Browser!
     
-    $image = "mysqlslideshow.php?image=$ids[$inx]&type=raw";
+    $image = $ss->getImage($ids[$inx], 'data', '')['data']; //"mysqlslideshow.php?image=$ids[$inx]&israw=1";
     $info = $ss->getInfo($ids[$inx++]);
     $_SESSION['index'] = ($inx > count($ids)-1) ? 0 : $inx;
     $subject = $info['subject'];
@@ -104,7 +95,7 @@ $ieMsg
 <input type="submit" name="stop" value="Stop"/>
 </form>
 <p>Image: $inx</p>
-<img src="$image" alt="" /><br>
+<img src="$image" alt="" width="500" /><br>
 <p>Subject: $subject, Description: $desc</p>
 </body>
 </html>
@@ -136,7 +127,7 @@ if(!$isIe) {
   $images = Array();
 
   for($i=0; $i < count($ids); ++$i) {
-    $images[$i] = $ss->getImage($ids[$i]);
+    $images[$i] = $ss->getImage($ids[$i], 'link');
   }
   $_SESSION['images'] = $images;
 }

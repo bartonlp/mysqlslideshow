@@ -21,20 +21,30 @@
 
 <html>
 <head>
-   <title>MySql Slideshow Example: Ajax Version</title>
+  <title>MySql Slideshow Example: Ajax Version</title>
    
-   <style type="text/css">
+  <style type="text/css">
 #displayAllImageInfo * {
   border: 1px solid black;
   padding: 0 10px;
 }
-   </style>
+#image img {
+  width: 500px;
+}
+  </style>
 
-   <!-- We are using the jQuery Javascript library -->
-  <script src="http://ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js"></script>
+  <!--
+  We are using the jQuery Javascript library along with the migration library.
+  These are the latest as of Dec. 2022
+  -->
+  
+  <script src="https://code.jquery.com/jquery-3.6.3.min.js" integrity="sha256-pvPw+upLPUjgMXY0G+8O0xUf+/Im1MZjXxxgOcBQBXU=" crossorigin="anonymous"></script>
+  <script src="https://code.jquery.com/jquery-migrate-3.4.0.min.js" integrity="sha256-mBCu5+bVfYzOqpYyK4jm30ZxAZRomuErKEFJFIyrwvM=" crossorigin="anonymous"></script>
+  <script>jQuery.migrateMute = false; jQuery.migrateTrace = false;</script>
+  
 
 <![if !IE]>   
-   <script>
+  <script>
 // The PHP class supports two ways of getting the image.
 // 1) The first method is supported by most good browsers. The image is returned as
 // "data:$mime;base64,$image" and this is added
@@ -49,24 +59,24 @@
 // <img src="mysqlslidshow.php?image=1&type=raw"...> in this case
 // you would have to also get the "subject" and "description" via the
 // "mysqlslideshow.php?info=1" in an Ajax call.
-// I show both methods as well as a caching approach using new Image().
+// I show method 2 in 'ie.html' as well as a caching approach using new Image().
 
-var ids = new Array;
+var ids = [];
 var inx = 0; // index starts at zero
 var timerid; // for use by clearTimeout()
-var reg=/^(.*)<::subject::>(.*)<::description::>(.*)/;
-var images = new Array;
-var infos = new Array;
+const reg=/^(.*)<::subject::>(.*)<::description::>(.*)/;
+var images = [];
+var infos = [];
 
 // setTimeout callback function.
 // NOTE: in both Ajax calls via $.get() if you really want the timing to include the network time you
-// should do the next setTimeout in the $.get() callback function. As this code is if th network takes a long
+// should do the next setTimeout in the $.get() callback function. If the network takes a long
 // time we could timeout before the image was received.
 
 function loadpic() {
   // We cash the images on the first load so we don't have to do the Ajax code every time.
   // We could also have loaded all the images when the page is first loaded and then only used the cached copies in the timer
-  // logic. See the IE version for this approach.
+  // logic. See the ie.html version for this approach.
   
   if(typeof images[inx] != "undefined") {
     $("#image").html("<p>Image from cache: " + (inx+1) + "</p><img src='" + images[inx] + "'/>");
@@ -75,7 +85,9 @@ function loadpic() {
     if(inx > ids.length-1) { inx = 0 };
     timerid = setTimeout("loadpic()", 5000);
   } else {
-    $.get("mysqlslideshow.php", {image: ids[inx], addinfo: 1}, function(data) {
+    console.log("image: ", ids);
+    $.get("mysqlslideshow.class.php", {class_image: ids[inx], addinfo: 1}, function(data) {
+      //console.log("data: ", data);
       var m = reg.exec(data);
       images[inx] = m[1];
       infos[inx] = new Array(m[2], m[3]);
@@ -99,25 +111,29 @@ jQuery(document).ready(function($) {
 
   $("#stop").hide();
 
-  $.get("mysqlslideshow.php", {ids : 1}, function(data) {
+  $.get("mysqlslideshow.class.php", {class_ids : 1}, function(data) {
     // data is a list of ids "'1','2'..."
-    ids = data.split(',');
+    data = JSON.parse(data);
+    console.log("ids data: ", data);
+    ids = data[0].split(",");
+    console.log("ids: ", ids);
   });
 
   // Put the table after the image div
-  $.get("mysqlslideshow.php", {table: 1}, function(data) {
+  $.get("mysqlslideshow.class.php", {class_table: 1}, function(data) {
+    console.log("table data: ", data);
     $("#image").after(data);
   });
 
   // Start and Stop button click event
-  $("#start").click(function() {
+  $("#start").on("click", function() {
     $("#start").hide();
     $("#stop").show();
     $("#displayAllImageInfo").hide(); // once we start hide the table
     loadpic();
   });
 
-  $("#stop").click(function() {
+  $("#stop").on("click", function() {
     clearTimeout(timerid);
     $("#stop").hide();
     $("#start").show();
@@ -128,86 +144,15 @@ jQuery(document).ready(function($) {
    
 <!--[if IE]>
   <script type="text/javascript">
-// This is the javascript that works with IE (maybe)
-/* Because I don't use MS-Window, like it or have it, this section may be out of date.
-   There are so many good, standard complient browsers available that if you use IE you
-   really deserve what you get. Sorry but I have no patients with people that insist on
-   punishing themselves. */
-   
 
-var ids = new Array;
-var inx = 0; // index starts at zero
-var timerid; // for use by clearTimeout()
-var reg=/<::subject::>(.*)<::description::>(.*)/;
-var images = new Array;
-var infos = new Array;
-
-// setTimeout callback function.
-// NOTE: in both Ajax calls via $.get() if you really want the timing to include the network time you
-// should do the next setTimeout in the $.get() callback function. As this code is if th network takes a long
-// time we could timeout before the image was received.
-
-// In this IE version we have initially cached all of the images in inmages and the info in infos
-
-function loadpic() {
-  $("#image").html("<p>Image: " + (inx+1) + "</p><img src='" + images[inx].src + "'/>");
-  $("#image").append("<p>Subject: " + infos[inx][0] + ", Description: " + infos[inx][1] +"</p>");
-  if(++inx > ids.length-1) { inx = 0 };
-  timerid = setTimeout("loadpic()", 5000);
-}
-
-jQuery(document).ready(function($) {
-  $("noscript").after('<h1>Slideshow Example: Ajax Version</h1>\
-<p style="color: red">Microsoft Internet Explorer Version, because Microsoft can not do it like anyone else!</p>\
-<button id="start">Start</button><button id="stop">Stop</button><br>\
-<div id="image"></div>');
-
-  $("#stop").hide();
-
-  // We get all the IDS and then precache all of the images
-
-
-  $.get("mysqlslideshow.php", {ids : 1}, function(data) {
-    // data is a list of ids "'1','2'..."
-    ids = data.split(',');
-
-    $.ajaxSetup({async: false}); // do the following synchronously so the 'infos' array is filled properly
-
-    // Now load all of the images and get the info
-    for(var i=0; i < ids.length; ++i) {
-      images[i] = new Image;
-      images[i].src = "mysqlslideshow.php?image=" + ids[i] + "&type=raw";
-
-      // do this synchronously
-      
-      $.get("mysqlslideshow.php", {info: ids[i]}, function(data) {
-        var m = reg.exec(data);
-        infos[i] = new Array(m[1], m[2]);
-      });
-    }
-    $.ajaxSetup({async: true}); // back to default
-  });
-
-  // Put the table after the image div
-  $.get("mysqlslideshow.php", {table: 1}, function(data) {
-    $("#image").after(data);
-  });
-
-  // Start and Stop button click event
-  $("#start").click(function() {
-    $("#start").hide();
-    $("#stop").show();
-    $("#displayAllImageInfo").hide(); // once we start hide the table
-    loadpic();
-  });
-
-  $("#stop").click(function() {
-    clearTimeout(timerid);
-    $("#stop").hide();
-    $("#start").show();
-  });
+jQuery(document).ready(function($) {   
+   let msg =`<h1>You are using Internet Explorer</h1>
+   <p>The <b>ie.html</b> will work with old, broken Internet Explorers</p>
+   <a href="ie.html">Use Internet Explorer</a>`;
+   $("body").append(msg);
 });
-   </script>
+  </script>
+
 <![endif]-->
 
 </head>

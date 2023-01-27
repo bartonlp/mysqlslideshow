@@ -1,41 +1,35 @@
 <?php
 // Add selected images from a directory
+// This file has the MySqlSlideshow class and the mysqlslideshow GET functions.
 
-// This file should not be in the Apache path for security reasons   
-require_once("dbclass.connectinfo.i.php"); // has $Host, $User, $Password
-
-// This file has the MySqlSlideshow class
-
-if(file_exists("../class")) {
-  require_once("../class/mysqlslideshow.class.php");
-} else {
-  require_once("../vendor/autoload.php");
-}
+require_once("mysqlslideshow.class.php"); // instantiates $ss
 
 // Construct the slideshow class:
 // There is a 4th argument for the database name if not "mysqlslideshow" and a
 // 5th argument for the table name if not "mysqlslideshow"
 
-$ss = new MySqlSlideshow($Host, $User, $Password, $Database); // use values from dbclass.connectinfo.i.php
-$self = $_SERVER[PHP_SELF];
+$self = $_SERVER["PHP_SELF"];
 
 // Add Image
 
-if($_POST) {
+if($_POST["box"]) {
   extract($_POST);
 
   $adding = '';
   
   for($i=0; $i < $count; ++$i) {
-    $image = eval("return \$box$i;");
-    if($image) {
-      $subject = eval("return \$subject$i;");
-      $desc = eval("return \$desc$i;");
-      if(($ret = $ss->addImage($image, $subject, $desc, $type)) === true) {
-        $adding .= "<p>Image added: $image, subject=$subject, description=$desc</p>\n";
-      } else {
-        $adding .= "<p style='color: red'>$ret</p>\n";
-      }
+    $image = $box[$i];
+    if(empty($image)) continue;
+    
+    $tsubject = $subject[$i];
+    $tdesc = $desc[$i];
+
+    error_log("subject: $tsubject, desc: $tdesc");
+
+    if(($ret = $ss->addImage($image, $tsubject, $tdesc)) === true) {
+      $adding .= "<p>Image added: $image, subject=$tsubject, description=$tdesc</p>\n";
+    } else {
+      $adding .= "<p style='color: red'>$ret</p>\n";
     }
   }
 
@@ -43,7 +37,7 @@ if($_POST) {
 <!DOCTYPE html>
 <html>
 <body>
-<h1>Adding Images</h1>
+<h1>Added Images</h1>
 $adding
 </body>
 </html>
@@ -53,23 +47,16 @@ EOF;
 
 // Main Page
 
-if($path = $_GET['path']) {
-  $type = $_GET['type'] ? $_GET['type'] : 'link';
-  
-  $ar = glob($path); // get all of the files from the directory
-  $images = Array();
-    
-  $pattern = $_GET['pattern'];
+if($path = $_POST['path']) {
+  $pattern = $_POST['pattern'];
 
-  if(!empty($pattern)) {
-      foreach($ar as $file) {
-      if(preg_match("/$pattern/", $file)) {
-          $images[] = $file;
-      }
-    }
+  if(strpos($path, "/", -1)) {
+    $path = "$path$pattern";
   } else {
-    $images = $ar;
+    $path = "$path/$pattern";
   }
+
+  $images = glob($path); // get all of the files from the directory
 
   $body = <<<EOF
 <h1>No Files Matched</h1>
@@ -78,37 +65,39 @@ EOF;
   if(count($images)) {
     $body = <<<EOF
 <h1>Select Images</h1>
-<form action="$self" method="post">
+<form method="post">
 EOF;
     
     for($i=0; $i < count($images); ++$i) {
       $image = $images[$i];
       $body .= <<<EOF
-<input type="checkbox" name="box$i" value="$image"/>$image<br>
-<input type="text" name="subject$i" /> Subject<br>
-<input type="text" name="desc$i" /> Description<br>
+<input type="checkbox" name="box[$i]" value="$image"/>$image<br>
+<input type="text" name="subject[$i]" /> Subject<br>
+<input type="text" name="desc[$i]" /> Description<br>
 <br>
 EOF;
     }
 
     $body .= <<<EOF
 <input type="hidden" name="count" value="$i" />
-<input type="hidden" name="type" value="$type" />
-<input type="submit" value="Submit"/>
+<button>Submit</button>
 </form>
 </body>
 </html>
 EOF;
   }
-} else {
-  $body = <<<EOF
-<h1>NO Parameters Passed</h1>
-<p>Required Parameter are:</p>
-<ul>
-<li>path: path to the directory with images</li>
-<li>type: </li>
-<li>pattern: Regular expression to filter the file in the 'path' by</li>
-</ul>
+}
+
+if(!$_POST) {
+  $body =<<<EOF
+<h1>Enter Image Location</h1>
+<form action="addimages.php" method="post">
+<table>
+<tr><th>Path to images</th><td><input type="text" name="path"></td></tr>
+<tr><th>Select a pattern to match against</th><td><input type="text" name="pattern"></td></tr>
+</table>
+<button>Do It</button>
+</form>
 EOF;
 }
 

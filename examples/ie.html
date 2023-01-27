@@ -6,7 +6,7 @@
 // The HTML for this example only has the <noscript> tags all the rest is handled by the
 // Javascript
 //
-// The style is to add borders and padding to the table.
+// The style is to add borders and padding to the table, and size the images.
 
 // In this example I use the jQuery Javascript library. You could code it all without jQuery but it would be harder.  When the
 // start button is clicked the PHP class library is called via Ajax (the $.get() jQuery function) with the ids[inx++] argument.
@@ -21,27 +21,36 @@
 
 <html>
 <head>
-   <title>MySql Slideshow Example: Ajax Version</title>
+  <title>MySql Slideshow Example: Ajax Version</title>
    
-   <style type="text/css">
+  <style type="text/css">
 #displayAllImageInfo * {
   border: 1px solid black;
   padding: 0 10px;
 }
-   </style>
+#image img {
+  width: 500px;
+}
+  </style>
 
-   <!-- We are using the jQuery Javascript library -->
-  <script src="http://ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js"></script>
-
+  <!--
+  We are using the jQuery Javascript library along with the migration library.
+  These are the latest as of Dec. 2022
+  -->
+  
+  <script src="https://code.jquery.com/jquery-3.6.3.min.js" integrity="sha256-pvPw+upLPUjgMXY0G+8O0xUf+/Im1MZjXxxgOcBQBXU=" crossorigin="anonymous"></script>
+  <script src="https://code.jquery.com/jquery-migrate-3.4.0.min.js" integrity="sha256-mBCu5+bVfYzOqpYyK4jm30ZxAZRomuErKEFJFIyrwvM=" crossorigin="anonymous"></script>
+  <script>jQuery.migrateMute = false; jQuery.migrateTrace = false;</script>
+  
   <script>
 // This is the javascript that works with IE
 
-var ids = new Array;
+var ids = [];
 var inx = 0; // index starts at zero
 var timerid; // for use by clearTimeout()
-var reg=/<::subject::>(.*)<::description::>(.*)/;
-var images = new Array;
-var infos = new Array;
+const reg=/(.*?)<::subject::>(.*)<::description::>(.*)/;
+var images = [];
+var infos = [];
 
 // setTimeout callback function.
 // NOTE: in both Ajax calls via $.get() if you really want the timing to include the network time you
@@ -58,57 +67,68 @@ function loadpic() {
 }
 
 jQuery(document).ready(function($) {
-  $("noscript").after('<h1>Slideshow Example: Ajax Version</h1>\
-<p style="color: red">Microsoft Internet Explorer Version, because Microsoft can not do it like anyone else!</p>\
-<button id="start">Start</button><button id="stop">Stop</button><br>\
-<div id="image"></div>');
+  // Fill in the starting information including the <div id="image">. At start the only thing in
+  // the body is the 'noscript' info.
+  
+  $("noscript").after(`<h1>Slideshow Example: Ajax Version</h1>
+<p style="color: red">Microsoft Internet Explorer Version, because Microsoft can not do it like anyone else!</p>
+<button id="start">Start</button><button id="stop">Stop</button><br>
+<div id="image"></div>`);
 
   $("#stop").hide();
 
   // We get all the IDS and then precache all of the images
 
-  $.get("mysqlslideshow.php", {ids : 1}, function(data) {
+  $.get("mysqlslideshow.class.php", {class_ids : 1}, function(data) {
+    data = JSON.parse(data);
+    console.log("DATA: ", data);
+    
     // data is a list of ids "'1','2'..."
-    ids = data.split(',');
+    ids = data[0].split(',');
 
-    $.ajaxSetup({async: false}); // do the following synchronously so the infos array is filled properly
+    console.log("ids: ", ids);
 
-    // Now load all of the images and get the info
-    for(var i=0; i < ids.length; ++i) {
-      images[i] = new Image;
-      images[i].src = "mysqlslideshow.php?image=" + ids[i] + "&type=raw";
-
-      // do this synchronously
+    // get all of the images
+    
+    $.get("mysqlslideshow.class.php", {class_images: ids, addinfo: 1, type: 'data'}, function(data) {
+      // Data is a json array
+      console.log("ie ids, data: ", data);
       
-      $.get("mysqlslideshow.php", {info: ids[i]}, function(data) {
-        var m = reg.exec(data);
-        infos[i] = new Array(m[1], m[2]);
-      });
-    }
-    $.ajaxSetup({async: true}); // back to default
+      data = JSON.parse(data);
+
+      console.log("ie ids after json: ", data);
+      
+      for(let d in data) {
+        let x = new Image;
+        let m = reg.exec(data[d]);
+        infos[d] = [m[2], m[3]];
+        x.src = m[1];
+        images[d] = x;
+      }
+    });
   });
-  
+
   // Put the table after the image div
-  $.get("mysqlslideshow.php", {table: 1}, function(data) {
+  $.get("mysqlslideshow.class.php", {class_table: 1}, function(data) {
     $("#image").after(data);
   });
 
   // Start and Stop button click event
-  $("#start").click(function() {
+  $("#start").on("click", function() {
     $("#start").hide();
     $("#stop").show();
     $("#displayAllImageInfo").hide(); // once we start hide the table
     loadpic();
   });
 
-  $("#stop").click(function() {
+  $("#stop").on("click", function() {
     clearTimeout(timerid);
     $("#stop").hide();
     $("#start").show();
   });
 });
 //-->
-   </script>
+  </script>
 
 <![endif]-->
 
@@ -120,6 +140,5 @@ jQuery(document).ready(function($) {
    <p>Your browser does not support Javascript or you have it disables. You can view a server side version by clicking
       <a href="serverside.php">Server Side Example</a></p>
 </noscript>
-
 </body>
 </html>
